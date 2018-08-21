@@ -1,0 +1,13 @@
+# Visual Studio 2015/2017 cache/options directory
+.vs/
+
+# User-specific files
+*.user
+
+# Build results
+/[Bb]in/
+/[Oo]bj/
+
+# NuGet Packages
+# The packages folder can be ignored because of Package Restore
+/[Pp]ackages/
