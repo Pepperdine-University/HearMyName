@@ -1,0 +1,70 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="HearMyName.SiteMaster" %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <link rel='shortcut icon' type='image/x-icon' href='favicon.ico' />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta name="robots" content="all" />
+    <meta name="description" content="HearMyName" />
+    <meta name="keywords" content="HearMyName" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+
+
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.0/sweetalert.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.0/sweetalert.min.js">
+
+    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    <!-- Add School CSS here -->
+<%--    <link href="[path-to-school-css]" rel="stylesheet" type="text/css" />--%>
+
+    <!-- Site-specific CSS -->
+    <link href="<%= ResolveUrl("~/Content/css/Site.css") %>" rel="stylesheet" type="text/css" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <asp:ContentPlaceHolder runat="server" ID="HeadContent" />
+
+</head>
+<body runat="server">
+    <div id="loadingBG" class="blackOverlay" style="display: none"></div>
+
+    <div class="loadingPopUp" id="divLoading" style="display: none" clientidmode="static">
+        <span class="centered-announcement">Saving your changes...
+        </span>
+    </div>
+    <div class="loadingPopUp" id="divBrowserIssue" style="display: none" clientidmode="static">
+        <span class="centered-announcement">Your browser is not supported by this application. Please use Chrome, Firefox or Chrome for Android to record your name. Thank you, sorry for the inconvenience!
+        </span>
+
+    </div>
+    <div class="headergroup">
+        <header>
+            <div class="fullframe">
+                <a href="<%= ResolveUrl("~/") %>" class="apptitle">Hear My Name</a>
+            </div>
+        </header>
+    </div>
+
+    <div class="container" runat="server">
+        <main class="home" runat="server">
+            <article runat="server" class="fullframe">
+                <asp:ContentPlaceHolder runat="server" ID="MainContent" />
+            </article>
+        </main>
+    </div>
+    <div class="copyright">
+        Copyright © <span id="lblYear"><%= DateTime.Now.Year %></span> Pepperdine University
+    </div>
+
+</body>
+</html>
