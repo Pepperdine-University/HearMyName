@@ -17,6 +17,7 @@
         <asp:HiddenField runat="server" ClientIDMode="Static" ID="recordingUpdated" />
         <asp:HiddenField runat="server" ClientIDMode="Static" Value="false" ID="somethingIsUpdated" />
         <asp:HiddenField runat="server" ClientIDMode="Static" ID="hdnUserBrowser" />
+        <asp:HiddenField runat="server" ClientIDMode="Static" ID="hdnMimeType" />
         <asp:HiddenField runat="server" ClientIDMode="Static" ID="hdnIsNSO" />
 
         <fieldset class="full" id="instructionsDiv">
@@ -77,68 +78,31 @@
         var browser;
 
         window.onload = function () {
-            detectBrowser();
+            checkForAudioFeatures();
+            $("#userBrowser").text(browser);        
+        }
 
-            $("#userBrowser").text(browser);
-
-            if (!(browser == 'chrome' || browser == 'android' || browser == 'firefox'))
-                showBrowserError();
-
+        function loadAudioContext() {
             var audio = document.getElementById("audioPlayer");
-            canvasContext = document.getElementById("meter").getContext("2d");
-            // monkeypatch Web Audio
+            canvasContext = document.getElementById("meter").getContext("2d");          
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
-
             // grab an audio context
             audioContext = new AudioContext();
             audio.addEventListener('ended', stopAudioPlayback);
-            audio.load(); // setting the source in the codebehind doesn't seem to work consistantly without triggering Load on clientside. 
-
-
+            audio.load(); 
         }
 
-
-        function detectBrowser() {
-
-            if (navigator.userAgent.match(/Android/i)) {
-                browser = 'android';
-            }
-            else if (navigator.userAgent.match(/iPhone/i)
-                || navigator.userAgent.match(/iPad/i)
-                || navigator.userAgent.match(/iPod/i)) {
-                browser = 'iphone';
-            }
-            // Opera 8.0+
-            else if ((!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0)
-                browser = 'opera';
-            // Firefox 1.0+
-            else if (typeof InstallTrigger !== 'undefined')
-                browser = 'firefox';
-            // Safari 3.0+ "[object HTMLElementConstructor]" 
-            else if (/constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification)))
-                browser = 'safari';
-            // Internet Explorer 6-11
-            else if  /*@cc_on!@*/(false || !!document.documentMode)
-                browser = 'ie';
-            // Edge 20+
-            else if (!!window.StyleMedia) //the order of browser checks is important, as this HAS to follow the IE check above to be succesful. 
-                browser = 'edge';
-            // Chrome 1+
-            else if (!!window.chrome && !!window.chrome.webstore)
-                browser = 'chrome';
-            // Blink engine detection
-            else if ((isChrome || isOpera) && !!window.CSS)
-                broser = 'blink';
-            else
-                browser = 'unknown';
-
-
-
+        function checkForAudioFeatures() {
+            if ((window.MediaRecorder == undefined) || (!MediaRecorder.isTypeSupported("audio/webm") && !MediaRecorder.isTypeSupported("audio/ogg")))
+                showBrowserError();
+            else if (MediaRecorder.isTypeSupported("audio/webm"))
+                $("#hdnMimeType").val("audio/webm");
+            else if (MediaRecorder.isTypeSupported("audio/ogg"))
+                $("#hdnMimeType").val("audio/ogg");
         }
-
-
-
+         
         function startRecording() {
+            loadAudioContext();
             try {
                 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
                 navigator.mediaDevices.getUserMedia(constraints).then(countdownStart);
@@ -146,8 +110,6 @@
             catch (e) {
                 console.error('getUserMedia() failed: ' + e);
             }
-
-
         }
 
         function countdownStart(stream) {
@@ -168,28 +130,18 @@
             theStream = stream;
             mediaStreamSource = audioContext.createMediaStreamSource(stream);
 
-
-
             // Create a new volume meter and connect it.
             meter = createAudioMeter(audioContext);
             mediaStreamSource.connect(meter);
 
-
             try {
-                if (browser == 'chrome' || browser == 'android')
-                    recorder = new MediaRecorder(stream, { mimeType: "audio/webm" }); //this has to be audio/webm for chrome and audio/ogg for firefox. 
-                else if (browser == 'firefox')
-                    recorder = new MediaRecorder(stream, { mimeType: "audio/ogg" });
-                else
-                    showBrowserError();
+                recorder = new MediaRecorder(stream, { mimeType: $("#hdnMimeType").val() });    
 
             } catch (e) {
                 alert("Error reaching the audio device. Please make sure you're using either Chrome or Firefox and that your browser is up to date." + e)
                 console.error('Exception while creating MediaRecorder: ' + e);
                 return;
             }
-
-
 
             theRecorder = recorder;
             recorder.ondataavailable =
@@ -198,12 +150,8 @@
             drawLoop(); //starts visual updating. 
         }
 
-
-
         function stopRecording() {
             $("#recordingUpdated").val("true");
-
-
             saveRecordedSound();
             var recordButton = document.getElementById("recordButton");
             recordButton.style.background = "#ededed";
@@ -218,19 +166,16 @@
             enableUploadButton();
             theRecorder.stop();
             theStream.getTracks().forEach(track => { track.stop(); });
-            if (browser == 'chrome' || browser == 'android')
-                blob = new Blob(recordedChunks, { type: "audio/webm" });
-            else if (browser == 'firefox')
-                blob = new Blob(recordedChunks, { type: "audio/ogg" });
-
+            blob = new Blob(recordedChunks, { type: $("#hdnMimeType").val() });
 
             var audio = document.getElementById("audioPlayer");
             audio.src = window.URL.createObjectURL(blob);
-            audio.load();
-
+            audio.load();   
         }
 
         function play() {
+            loadAudioContext();
+
             var audio = document.getElementById("audioPlayer");
             var playButton = document.getElementById("playButton");
             var recordButton = document.getElementById("recordButton");
@@ -242,9 +187,6 @@
             playButton.onclick = stopAudioPlayback;
             playButton.style.background = "#b2e57b";
             playButton.innerHTML = "Stop";
-
-
-
         }
 
         function stopAudioPlayback() {
@@ -257,8 +199,6 @@
             playButton.onclick = play;
             playButton.style.background = "#ededed";
             playButton.innerHTML = "Play Back";
-
-
         }
 
 
@@ -287,15 +227,11 @@
 
         function uploadAJAXAudio() {
 
-
             showLoading();
             somethingChanged();
             var blob;
             var shouldUpdateRecording = $("#recordingUpdated").val() || 'false';
-            if (browser == 'chrome' || browser == 'android')
-                blob = new Blob(recordedChunks, { type: "audio/webm" });
-            else if (browser == 'firefox')
-                blob = new Blob(recordedChunks, { type: "audio/ogg" });
+            blob = new Blob(recordedChunks, { type: $("#hdnMimeType").val() });
 
             var currentUserID = '<%=Session["CurrentUserID"] %>';
 
@@ -313,20 +249,15 @@
                 reader.readAsDataURL(blob);
             }
 
-
             reader.addEventListener("loadend", function () {
-                PageMethods.uploadRecording(shouldUpdateRecording, reader.result, $("#hdnRecordingID").val(), $("#hdnemail").val(), $("#txtPreferredName").val(), $("#txtPhoneticName").val(), $("#hdnStudentSystemName").val(), $("#hdnNTID").val(), currentUserID, browser, handleRecordingUpdateComplete);
-            }, false);
-
+                PageMethods.uploadRecording(shouldUpdateRecording, reader.result, $("#hdnRecordingID").val(), $("#hdnemail").val(), $("#txtPreferredName").val(), $("#txtPhoneticName").val(), $("#hdnStudentSystemName").val(), $("#hdnNTID").val(), currentUserID, $("#hdnMimeType").val(), handleRecordingUpdateComplete);
+            }, false);    
         }
 
         function handleRecordingUpdateComplete(recordingID) {
             $("#hdnRecordingID").val(recordingID);
             hideLoading();
         }
-
-
-
 
         function somethingChanged() {
             var updateButton = $("#btnUpdate");
@@ -337,7 +268,6 @@
             var updateButton = $("#btnUpdate");
             updateButton.prop("disabled", false);
         }
-
 
         //this is not used, jsut a way to triggere the visualizer. 
         function startVisualizer() {
@@ -377,8 +307,5 @@
             }
         }
 
-
     </script>
-
-
 </asp:Content>

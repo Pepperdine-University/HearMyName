@@ -33,7 +33,7 @@ namespace HearMyName
             hdnIsNSO.Value = isNSO.ToString();
 
             ICasPrincipal p = HttpContext.Current.User as ICasPrincipal;
-            CWID = p == null ? "1" : p.Assertion.Attributes["employeeID"][0];
+            CWID = p == null ? "100538403" : p.Assertion.Attributes["employeeID"][0];
             
             Name = getStudentNameFromCWID(CWID);
             systemName = p == null ? "Test Subject (REMOVE ME) SystemName" : p.Assertion.Attributes["displayName"][0];
@@ -118,7 +118,7 @@ namespace HearMyName
 
             if (info==null)
             {
-                fullName = (p == null ? "Test Subject 111" : p.Assertion.Attributes["displayName"][0]);
+                fullName = (p == null ? "Daniil Gedgafov" : p.Assertion.Attributes["displayName"][0]);
             }
             else
             {
@@ -135,11 +135,11 @@ namespace HearMyName
 
         [WebMethod]
         [System.Web.Script.Services.ScriptMethod()]
-        public static string uploadRecording(bool ShouldRecordingGetUpdated, string recordingData, int recordingID, string email, string preferredName, string pronounciation, string studentSystemName, string NTID, string currentUserID, string userBrowser)
+        public static string uploadRecording(bool ShouldRecordingGetUpdated, string recordingData, int recordingID, string email, string preferredName, string pronounciation, string studentSystemName, string NTID, string currentUserID, string mimeType)
         {
             string ext = string.Empty;
             string newRecordingID = string.Empty;
-            if (userBrowser.Equals("chrome") || userBrowser.Equals("android"))
+            if (mimeType.Contains("webm"))
                 ext = "webm";
             else 
                 ext = "ogg";
